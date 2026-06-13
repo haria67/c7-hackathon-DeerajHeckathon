@@ -8,11 +8,19 @@ from llm_client import CachingLLMClient
 from session_evals import record_llm_call
 from state import SecurityState
 
-_llm = CachingLLMClient(
-    api_key=os.getenv("OPENROUTER_API_KEY"),
-    base_url="https://openrouter.ai/api/v1",
-    cache=get_default_cache(),
-)
+_llm: CachingLLMClient | None = None
+
+
+def _get_llm() -> CachingLLMClient:
+    """Return a shared LLM client, created on first use."""
+    global _llm
+    if _llm is None:
+        _llm = CachingLLMClient(
+            api_key=os.getenv("OPENROUTER_API_KEY"),
+            base_url="https://openrouter.ai/api/v1",
+            cache=get_default_cache(),
+        )
+    return _llm
 
 
 def call_openai(prompt: str, session_id: str | None = None) -> str:
@@ -32,7 +40,7 @@ def call_openai(prompt: str, session_id: str | None = None) -> str:
         },
         {"role": "user", "content": prompt},
     ]
-    response, meta = _llm.chat(
+    response, meta = _get_llm().chat(
         agent="incident_response",
         model="openai/gpt-4o",
         messages=messages,
@@ -48,7 +56,7 @@ def call_openai(prompt: str, session_id: str | None = None) -> str:
             latency_ms=meta.latency_ms,
             cache_hit=meta.cache_hit,
         )
-    return _llm.extract_text(response)
+    return _get_llm().extract_text(response)
 
 
 def build_prompt(state: SecurityState) -> str:

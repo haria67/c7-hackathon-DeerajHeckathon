@@ -42,13 +42,21 @@ class CachingLLMClient:
         run_label: str = "",
     ):
         """Configure OpenAI client, optional cache, and eval tracker."""
-        self._client = OpenAI(
-            api_key=api_key or os.environ.get("OPENAI_API_KEY", ""),
-            base_url=base_url,   # set to OpenRouter URL for that path
-        )
+        self._api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
+        self._base_url = base_url
+        self._client: OpenAI | None = None
         self._cache = cache  # None → caching disabled for this client
         self._tracker = tracker
         self.run_label = run_label
+
+    def _openai_client(self) -> OpenAI:
+        """Create the OpenAI client lazily so the app can start without an API key."""
+        if self._client is None:
+            self._client = OpenAI(
+                api_key=self._api_key,
+                base_url=self._base_url,
+            )
+        return self._client
 
     def chat(
         self,
@@ -91,7 +99,7 @@ class CachingLLMClient:
             kwargs["max_tokens"] = max_tokens
 
         t0 = time.perf_counter()
-        raw = self._client.chat.completions.create(**kwargs)
+        raw = self._openai_client().chat.completions.create(**kwargs)
         latency_ms = (time.perf_counter() - t0) * 1000
 
         response = raw.model_dump()

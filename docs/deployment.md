@@ -2,6 +2,16 @@
 
 CyberSentinel AI is a **split deployment**: the React dashboard runs on **Vercel**, and the FastAPI backend runs on **Railway** (or Render). Vercel is ideal for the static Vite frontend; the backend needs a long-running process for SSE streaming, background analysis, and in-memory session state.
 
+## Live deployment (example)
+
+| Service | URL |
+|---------|-----|
+| Frontend (Vercel) | https://frontend-pearl-five-55.vercel.app |
+| Backend (Railway) | https://cybersentinel-api-production.up.railway.app |
+| API docs | https://cybersentinel-api-production.up.railway.app/docs |
+
+---
+
 ## Architecture
 
 ```
@@ -17,9 +27,11 @@ Browser  →  Vercel (frontend)  →  Railway (FastAPI backend)
 | Frontend (`frontend/`) | Vercel | Static Vite build, CDN, preview URLs |
 | Backend (`backend/`) | Railway | Persistent server, SSE, 5-agent pipeline, no serverless timeout |
 
----
+### Railway build notes
 
-## 1. Deploy the backend (Railway)
+This repo includes `backend/mise.toml` to work around Railway/Railpack Python attestation issues. `fastapi` is listed explicitly in `requirements.txt` (not only as a transitive dependency).
+
+---
 
 ### Option A — GitHub (recommended)
 
