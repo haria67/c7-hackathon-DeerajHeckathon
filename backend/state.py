@@ -29,6 +29,10 @@ class SecurityState(TypedDict):
     files_scanned: int
     code_findings: list[dict]
     scan_error: str
+    slack_webhook_url: str
+    slack_sent: bool
+    slack_error: str
+    slack_skipped: bool
 
 
 def make_initial_state(
@@ -36,6 +40,7 @@ def make_initial_state(
     log_source: str,
     session_id: str,
     github_repo: str = "",
+    slack_webhook_url: str = "",
 ) -> SecurityState:
     """Create a fresh ``SecurityState`` with empty agent output fields.
 
@@ -44,6 +49,7 @@ def make_initial_state(
         log_source: One of ``synthetic``, ``system``, ``upload``, or ``github``.
         session_id: UUID for this analysis run.
         github_repo: Optional ``owner/repo`` when scanning a GitHub repository.
+        slack_webhook_url: Optional Slack incoming webhook for incident alerts.
 
     Returns:
         Initial state ready for the Log Monitor entry point.
@@ -68,4 +74,8 @@ def make_initial_state(
         files_scanned=0,
         code_findings=[],
         scan_error="",
+        slack_webhook_url=slack_webhook_url,
+        slack_sent=False,
+        slack_error="",
+        slack_skipped=True,
     )

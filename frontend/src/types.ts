@@ -75,6 +75,9 @@ export interface SecurityReport {
   files_scanned?: number;
   code_findings?: CodeFinding[];
   scan_error?: string;
+  slack_sent?: boolean;
+  slack_error?: string;
+  slack_skipped?: boolean;
 }
 
 export interface AgentEvent {

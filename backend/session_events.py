@@ -24,6 +24,7 @@ def create_session(session_id: str) -> queue.Queue:
         "vuln_scanner": "pending",
         "incident_response": "pending",
         "policy_checker": "pending",
+        "slack_notifier": "pending",
     }
     return q
 

@@ -6,6 +6,7 @@ const AGENT_IDS = [
   'vuln_scanner',
   'incident_response',
   'policy_checker',
+  'slack_notifier',
 ] as const;
 
 const AGENT_LABELS: Record<(typeof AGENT_IDS)[number], string> = {
@@ -14,6 +15,7 @@ const AGENT_LABELS: Record<(typeof AGENT_IDS)[number], string> = {
   vuln_scanner: 'VulnScanner',
   incident_response: 'IncidentResponse',
   policy_checker: 'PolicyChecker',
+  slack_notifier: 'SlackNotifier',
 };
 
 type AgentStatus = 'idle' | 'running' | 'done' | 'error';

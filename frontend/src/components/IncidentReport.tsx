@@ -77,6 +77,23 @@ export default function IncidentReport({ report }: Props) {
               ))}
             </div>
           </div>
+
+          {!report.slack_skipped && (
+            <div className="pt-3 border-t border-gray-800">
+              <h4 className="text-purple-400 font-semibold text-sm mb-2">
+                💬 Slack Notification
+              </h4>
+              {report.slack_sent ? (
+                <p className="text-sm text-green-400">
+                  Incident summary and resolution steps were posted to Slack.
+                </p>
+              ) : (
+                <p className="text-sm text-red-400">
+                  {report.slack_error || 'Failed to send Slack notification.'}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

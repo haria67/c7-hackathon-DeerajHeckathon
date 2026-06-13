@@ -19,3 +19,5 @@ def test_make_initial_state_sets_required_fields():
     assert state["compliance_score"] == 0
     assert state["github_repo"] == ""
     assert state["code_findings"] == []
+    assert state["slack_webhook_url"] == ""
+    assert state["slack_skipped"] is True

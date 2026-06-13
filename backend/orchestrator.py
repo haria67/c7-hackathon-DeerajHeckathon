@@ -1,4 +1,4 @@
-"""LangGraph orchestration for the five-agent security analysis pipeline."""
+"""LangGraph orchestration for the six-agent security analysis pipeline."""
 
 from langgraph.graph import END, StateGraph
 import time
@@ -6,6 +6,7 @@ import time
 from agents.incident_response import run_incident_response
 from agents.log_monitor import run_log_monitor
 from agents.policy_checker import run_policy_checker
+from agents.slack_notifier import run_slack_notifier
 from agents.threat_intel import run_threat_intel
 from agents.vuln_scanner import run_vuln_scanner
 from session_events import emit_sync
@@ -18,6 +19,7 @@ AGENTS = [
     ("vuln_scanner", run_vuln_scanner),
     ("incident_response", run_incident_response),
     ("policy_checker", run_policy_checker),
+    ("slack_notifier", run_slack_notifier),
 ]
 
 
@@ -64,7 +66,8 @@ def build_graph():
     graph.add_edge("threat_intel", "vuln_scanner")
     graph.add_edge("vuln_scanner", "incident_response")
     graph.add_edge("incident_response", "policy_checker")
-    graph.add_edge("policy_checker", END)
+    graph.add_edge("policy_checker", "slack_notifier")
+    graph.add_edge("slack_notifier", END)
     return graph.compile()
 
 
@@ -73,6 +76,7 @@ def run_analysis(
     log_source: str,
     session_id: str,
     github_repo: str = "",
+    slack_webhook_url: str = "",
 ) -> SecurityState:
     """Execute the full agent pipeline synchronously.
 
@@ -81,6 +85,7 @@ def run_analysis(
         log_source: Source label stored in state and session metadata.
         session_id: UUID for SSE and eval tracking.
         github_repo: Optional ``owner/repo`` to scan via the Vuln Scanner.
+        slack_webhook_url: Optional Slack incoming webhook for alerts.
 
     Returns:
         Final ``SecurityState`` after all agents complete.
@@ -91,5 +96,6 @@ def run_analysis(
         log_source=log_source,
         session_id=session_id,
         github_repo=github_repo,
+        slack_webhook_url=slack_webhook_url,
     )
     return app.invoke(initial)

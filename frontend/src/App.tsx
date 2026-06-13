@@ -35,12 +35,14 @@ export default function App() {
     file?: File,
     githubUrl?: string,
     includeLogs?: boolean,
+    slackWebhookUrl?: string,
   ) {
     setLoading(true);
     resetRunState();
 
     try {
       let payload: AnalyzeMeta & { session_id: string };
+      const slack = slackWebhookUrl?.trim() ?? '';
       if (source === 'github' && githubUrl) {
         const res = await fetch(`${API}/analyze/github`, {
           method: 'POST',
@@ -49,6 +51,7 @@ export default function App() {
             repo_url: githubUrl,
             include_logs: includeLogs ?? false,
             log_source: 'synthetic',
+            slack_webhook_url: slack,
           }),
         });
         if (!res.ok) throw new Error(await res.text());
@@ -56,6 +59,7 @@ export default function App() {
       } else if (source === 'upload' && file) {
         const form = new FormData();
         form.append('file', file);
+        if (slack) form.append('slack_webhook_url', slack);
         const res = await fetch(`${API}/analyze/upload`, { method: 'POST', body: form });
         if (!res.ok) throw new Error(await res.text());
         payload = await res.json();
@@ -63,7 +67,7 @@ export default function App() {
         const res = await fetch(`${API}/analyze`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ source }),
+          body: JSON.stringify({ source, slack_webhook_url: slack }),
         });
         if (!res.ok) throw new Error(await res.text());
         payload = await res.json();
@@ -209,7 +213,7 @@ export default function App() {
                 <>
                   <MetricCard label="Critical Threats" value={criticalCount} color="red" />
                   <MetricCard label="Warnings" value={warningCount} color="yellow" />
-                  <MetricCard label="Agents Active" value={`${agentsDone}/5`} color="green" />
+                  <MetricCard label="Agents Active" value={`${agentsDone}/6`} color="green" />
                   <MetricCard
                     label="Compliance Score"
                     value={report ? `${report.compliance_score}%` : '—'}

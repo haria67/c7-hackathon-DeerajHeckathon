@@ -33,7 +33,7 @@ def test_evals_endpoint_returns_run_after_analysis():
     assert detail.status_code == 200
     data = detail.json()
     assert data["log_source"] == "synthetic"
-    assert len(data["agents"]) == 5
+    assert len(data["agents"]) == 6
     ir = next(a for a in data["agents"] if a["agent"] == "incident_response")
     assert ir["calls"][0]["cache_hit"] is True
     assert ir["cost_saved_usd"] > 0

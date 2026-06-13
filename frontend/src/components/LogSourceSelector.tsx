@@ -6,6 +6,7 @@ interface Props {
     file?: File,
     githubUrl?: string,
     includeLogs?: boolean,
+    slackWebhookUrl?: string,
   ) => void;
   onSourceChange?: (source: string) => void;
   loading: boolean;
@@ -16,6 +17,7 @@ export default function LogSourceSelector({ onRun, onSourceChange, loading }: Pr
   const [file, setFile] = useState<File | null>(null);
   const [githubUrl, setGithubUrl] = useState('');
   const [includeLogs, setIncludeLogs] = useState(false);
+  const [slackWebhookUrl, setSlackWebhookUrl] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   function selectSource(next: string) {
@@ -77,10 +79,11 @@ export default function LogSourceSelector({ onRun, onSourceChange, loading }: Pr
         <button
           type="button"
           onClick={() => {
+            const slack = slackWebhookUrl.trim();
             if (source === 'github') {
-              onRun('github', undefined, githubUrl.trim(), includeLogs);
+              onRun('github', undefined, githubUrl.trim(), includeLogs, slack);
             } else {
-              onRun(source, source === 'upload' ? file ?? undefined : undefined);
+              onRun(source, source === 'upload' ? file ?? undefined : undefined, undefined, undefined, slack);
             }
           }}
           disabled={loading || !canRun}
@@ -115,6 +118,22 @@ export default function LogSourceSelector({ onRun, onSourceChange, loading }: Pr
           </label>
         </div>
       )}
+
+      <div className="pt-2 border-t border-gray-800">
+        <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">
+          Slack notification (optional)
+        </label>
+        <input
+          type="url"
+          value={slackWebhookUrl}
+          onChange={(e) => setSlackWebhookUrl(e.target.value)}
+          placeholder="https://hooks.slack.com/services/T.../B.../..."
+          className="w-full bg-gray-950 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 focus:outline-none focus:border-blue-600"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Posts incidents and remediation steps to your channel when analysis completes.
+        </p>
+      </div>
     </div>
   );
 }

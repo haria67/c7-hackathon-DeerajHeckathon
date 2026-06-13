@@ -10,6 +10,7 @@ const AGENT_COLORS: Record<string, string> = {
   vuln_scanner: 'border-purple-800 bg-purple-950/50',
   incident_response: 'border-yellow-800 bg-yellow-950/50',
   policy_checker: 'border-cyan-800 bg-cyan-950/50',
+  slack_notifier: 'border-pink-800 bg-pink-950/50',
 };
 
 const TYPE_LABELS: Record<string, string> = {

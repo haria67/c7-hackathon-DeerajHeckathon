@@ -17,6 +17,7 @@ AGENT_LABELS = {
     "vuln_scanner": "Vuln Scanner",
     "incident_response": "Incident Response",
     "policy_checker": "Policy Checker",
+    "slack_notifier": "Slack Notifier",
 }
 
 AGENT_TYPES = {
@@ -25,6 +26,7 @@ AGENT_TYPES = {
     "vuln_scanner": "deterministic",
     "incident_response": "llm",
     "policy_checker": "deterministic",
+    "slack_notifier": "external_api",
 }
 
 AGENT_CACHE_INFO = {
@@ -47,6 +49,10 @@ AGENT_CACHE_INFO = {
     "policy_checker": {
         "strategy": "none",
         "reason": "NIST/SOC2 rule mapping — no LLM calls",
+    },
+    "slack_notifier": {
+        "strategy": "none",
+        "reason": "Slack incoming webhook POST when user provides URL",
     },
 }
 

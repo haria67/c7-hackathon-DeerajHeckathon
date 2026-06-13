@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import BackgroundTasks, FastAPI, File, HTTPException, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
@@ -36,6 +36,7 @@ class AnalyzeRequest(BaseModel):
     """Request body for ``POST /analyze``."""
 
     source: str
+    slack_webhook_url: str = ""
 
 
 def _load_synthetic_logs() -> list[str]:
@@ -112,12 +113,18 @@ async def _run_analysis_background(
     log_source: str,
     session_id: str,
     github_repo: str = "",
+    slack_webhook_url: str = "",
 ) -> None:
     """Run the LangGraph pipeline in a thread and emit completion events."""
     _running.add(session_id)
     try:
         state = await asyncio.to_thread(
-            run_analysis, logs, log_source, session_id, github_repo
+            run_analysis,
+            logs,
+            log_source,
+            session_id,
+            github_repo,
+            slack_webhook_url,
         )
         _sessions[session_id] = state
         finish_session(session_id)
@@ -133,6 +140,7 @@ def _start_analysis(
     background_tasks: BackgroundTasks,
     log_meta: dict | None = None,
     github_repo: str = "",
+    slack_webhook_url: str = "",
 ) -> tuple[str, dict]:
     """Create a session, register eval tracking, and queue background analysis.
 
@@ -148,11 +156,18 @@ def _start_analysis(
         used_fallback=log_meta.get("used_fallback", False) if log_meta else False,
     )
     background_tasks.add_task(
-        _run_analysis_background, logs, log_source, session_id, github_repo
+        _run_analysis_background,
+        logs,
+        log_source,
+        session_id,
+        github_repo,
+        slack_webhook_url,
     )
     meta = {"log_source": log_source, **(log_meta or {})}
     if github_repo:
         meta["github_repo"] = github_repo
+    if slack_webhook_url:
+        meta["slack_notify"] = True
     _session_meta[session_id] = meta
     return session_id, meta
 
@@ -163,6 +178,7 @@ class GitHubAnalyzeRequest(BaseModel):
     repo_url: str
     include_logs: bool = False
     log_source: str = "synthetic"
+    slack_webhook_url: str = ""
 
 
 @app.post("/analyze")
@@ -170,14 +186,17 @@ async def analyze(request: AnalyzeRequest, background_tasks: BackgroundTasks):
     """Start log analysis from synthetic or system log sources."""
     logs, log_meta = _load_logs_for_source(request.source)
     session_id, meta = _start_analysis(
-        logs, request.source, background_tasks, log_meta
+        logs, request.source, background_tasks, log_meta,
+        slack_webhook_url=request.slack_webhook_url.strip(),
     )
     return {"session_id": session_id, **meta}
 
 
 @app.post("/analyze/upload")
 async def analyze_upload(
-    background_tasks: BackgroundTasks, file: UploadFile = File(...)
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    slack_webhook_url: str = Form(""),
 ):
     """Start analysis from an uploaded ``.log`` or ``.txt`` file (max 10 MB)."""
     content = await file.read()
@@ -191,7 +210,13 @@ async def analyze_upload(
         "paths": [file.filename or "upload"],
         "line_count": len(logs),
     }
-    session_id, meta = _start_analysis(logs, "upload", background_tasks, log_meta)
+    session_id, meta = _start_analysis(
+        logs,
+        "upload",
+        background_tasks,
+        log_meta,
+        slack_webhook_url=slack_webhook_url.strip(),
+    )
     return {"session_id": session_id, **meta}
 
 
@@ -228,6 +253,7 @@ async def analyze_github(
         background_tasks,
         log_meta,
         github_repo=github_repo,
+        slack_webhook_url=request.slack_webhook_url.strip(),
     )
     return {"session_id": session_id, **meta}
 
