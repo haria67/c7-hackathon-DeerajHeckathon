@@ -107,6 +107,7 @@ cd backend && .venv/bin/python -m pytest tests/ -q
 
 | Doc | Description |
 |-----|-------------|
+| [backend/README.md](backend/README.md) | Backend architecture, patterns, API, and setup |
 | [docs/architecture.md](docs/architecture.md) | System architecture reference |
 | [docs/superpowers/specs/2026-06-12-cybersentinel-ai-design.md](docs/superpowers/specs/2026-06-12-cybersentinel-ai-design.md) | Full design spec |
 | [frontend/README.md](frontend/README.md) | Dashboard UI components |
